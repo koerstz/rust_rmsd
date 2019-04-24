@@ -1,0 +1,10 @@
+[package]
+name = "rust_rmsd"
+version = "0.1.0"
+authors = ["Mads Koerstz"]
+edition = "2018"
+
+[dependencies]
+ndarray = "0.12.1"
+ndarray-linalg = { version = "0.10", features = ["openblas"] }
+clap = "2.33.0"
