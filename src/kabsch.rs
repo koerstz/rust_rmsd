@@ -1,5 +1,5 @@
 use ndarray_linalg::*;
-use ndarray::Array2;
+use ndarray::{Array,Array2};
 
 pub fn rmsd(mat1: &Array2<f64>, mat2: &Array2<f64>) -> f64 {
     // Compute rmsd between the two matrices.
@@ -29,14 +29,25 @@ fn kabsch_rotate(mat1: &Array2<f64>, mat2: &Array2<f64>) -> Array2<f64> {
 
 fn kabsch(mat1: &Array2<f64>, mat2: &Array2<f64>) -> Array2<f64> {
 
-    // Covariance matrix - not ideal right now.
-    let transposed_mat1 = &mat1.t();
-    let cov = transposed_mat1.dot(mat2);
+    // Covariance matrix.
+    let cov = mat1.t().dot(mat2);
+    let usv = cov.svd(true, true).expect("Failed to perform SVD");
 
-    let (u, _s, v) = cov.svd(true, true).expect("Failed to perform SVD");
+    let u = usv.0.unwrap();
+    let v = usv.2.unwrap();
 
-    // compute rotation matrix
-    let rotation_matrix = u.unwrap().dot(&v.unwrap());
+    // Correct our rotation matrix to ensure a right-handed coordinate system.
+    let mut d = &v.det().unwrap() * &u.det().unwrap();
+    if d > 0.0 {
+        d = 1.0
+    } else {
+        d = -1.0
+    }
+    let mut m: Array2<f64> = Array::eye(3);
+    m[[2,2]] = d;
+
+    // Compute rotation matrix,
+    let rotation_matrix = u.dot(&m).dot(&v);
 
     rotation_matrix
 }
